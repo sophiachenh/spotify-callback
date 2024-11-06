@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spotify OAuth Callback</title>
+</head>
+<body>
+    <script>
+        // Extract the access token from the URL fragment
+        const tokenMatch = window.location.hash.match(/access_token=([^&]*)/);
+        const accessToken = tokenMatch ? tokenMatch[1] : null;
+
+        if (accessToken) {
+            // Send the token to the Chrome extension
+            chrome.runtime.sendMessage({ token: accessToken }, (response) => {
+                window.close(); // Close the callback window after sending the token
+            });
+        } else {
+            console.error("Failed to retrieve access token.");
+        }
+    </script>
+</body>
+</html>
