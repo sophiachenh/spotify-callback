@@ -1,59 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Callback</title>
+<html>
+  <head>
+    <title>Spotify OAuth Callback</title>
+  </head>
+  <body>
     <script>
-        window.onload = function () {
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
-            const state = params.get('state');
+      // Get the authorization code from the URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      
+      // Define necessary variables (clientId, clientSecret, redirectUri)
+      const clientId = 'aab1ffc368c24a60a291c6705b89f7b1';
+      const clientSecret = '0eca651a8a58408eae91f39349797b77';
+      const redirectUri = 'https://sophiachenh.github.io/spotify-callback/callback.html';
 
-            if (code && state) {
-                // Prepare the request to exchange code for access token
-                const clientId = "YOUR_CLIENT_ID";
-                const clientSecret = "YOUR_CLIENT_SECRET";
-                const redirectUri = "YOUR_REDIRECT_URI"; // Make sure this is correct
-
-                const headers = new Headers();
-                headers.set('Authorization', 'Basic ' + btoa(clientId + ':' + clientSecret));
-                headers.set('Content-Type', 'application/x-www-form-urlencoded');
-
-                const body = new URLSearchParams({
-                    grant_type: 'authorization_code',
-                    code: code,
-                    redirect_uri: redirectUri
-                });
-
-                fetch('https://accounts.spotify.com/api/token', {
-                    method: 'POST',
-                    headers: headers,
-                    body: body
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.access_token) {
-                        console.log("Access Token:", data.access_token);
-                        alert("Authorization successful! Token received.");
-                    } else {
-                        console.error("Failed to retrieve access token:", data);
-                        alert("Authorization failed.");
-                    }
-                })
-                .catch(err => {
-                    console.error("Error:", err);
-                    alert("An error occurred.");
-                });
-            } else {
-                alert("Authorization failed. Missing code or state.");
-            }
-        };
+      // Send request to get access token
+      fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa(clientId + ':' + clientSecret),
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: code,
+          redirect_uri: redirectUri
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.access_token) {
+          console.log('Access Token:', data.access_token);
+          // Store the token or send it to the background script
+          chrome.runtime.sendMessage({ action: 'storeToken', token: data.access_token });
+        } else {
+          console.error('Failed to retrieve access token');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
     </script>
-</head>
-<body>
-    <h1>Spotify Authorization Callback</h1>
-    <p>Processing...</p>
-</body>
+  </body>
 </html>
+
+
+
 
