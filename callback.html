@@ -1,57 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Spotify Callback</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Callback</title>
 </head>
 <body>
-  <h1>Spotify Authentication Successful</h1>
-  <script>
-    // Get the code from the URL
-    const code = new URLSearchParams(window.location.search).get("code");
+    <h1>Spotify Authentication Successful</h1>
+    <script>
+        // Get the authorization code from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state'); // For state parameter validation if needed
 
-    if (code) {
-      const clientId = "aab1ffc368c24a60a291c6705b89f7b1";  // Replace with your client ID
-      const clientSecret = "0eca651a8a58408eae91f39349797b77";  // Replace with your client secret
-      const redirectUri = "https://sophiachenh.github.io/spotify-callback/callback.html";  // Replace with your redirect URI
+        if (code) {
+            console.log("Authorization code received:", code);
 
-      const headers = new Headers();
-      headers.set('Authorization', 'Basic ' + btoa(clientId + ':' + clientSecret));
-      headers.set('Content-Type', 'application/x-www-form-urlencoded');
+            // Use the authorization code to get the access token
+            fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    code: code,
+                    redirect_uri: 'https://sophiachenh.github.io/spotify-callback/callback.html', // your redirect URI
+                    grant_type: 'authorization_code',
+                    client_id: 'aab1ffc368c24a60a291c6705b89f7b1',  // Your client ID
+                    client_secret: '0eca651a8a58408eae91f39349797b77',  // Your client secret
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access_token) {
+                    console.log("Access Token:", data.access_token);
 
-      const body = new URLSearchParams({
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: redirectUri
-      });
-
-      // Make the request to exchange the code for an access token
-      fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: headers,
-        body: body
-      })
-        .then(response => response.json())
-        .then(data => {
-          if (data.access_token) {
-            console.log('Access Token:', data.access_token);
-
-            // Instead of directly using chrome.runtime, use window.postMessage to communicate with the popup or background page
-            window.opener.postMessage({ action: 'storeToken', token: data.access_token }, '*');
-
-            // Optionally close the callback window
-            window.close();
-          } else {
-            console.error('Failed to retrieve access token');
-          }
-        })
-        .catch(err => {
-          console.error('Error:', err);
-        });
-    }
-  </script>
+                    // Ensure window.opener exists before calling postMessage
+                    if (window.opener) {
+                        // Send token to popup
+                        window.opener.postMessage({ token: data.access_token }, '*');
+                        setTimeout(() => {
+                            window.close(); // Close after sending message
+                        }, 500);
+                    } else {
+                        console.error("No opener window found");
+                    }
+                } else {
+                    console.error("Failed to retrieve access token");
+                }
+            })
+            .catch(error => {
+                console.error("Error exchanging code for token:", error);
+            });
+        } else {
+            console.error("Authorization code not found in URL.");
+        }
+    </script>
 </body>
 </html>
+
 
 
 
