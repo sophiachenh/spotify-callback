@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Spotify Auth Callback</title>
+  <title>Spotify Callback</title>
 </head>
 <body>
+  <h1>Spotify Authentication Successful</h1>
   <script>
-    // Extract the authorization code from the URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
+    // Get the code from the URL
+    const code = new URLSearchParams(window.location.search).get("code");
 
     if (code) {
       const clientId = "aab1ffc368c24a60a291c6705b89f7b1";  // Replace with your client ID
       const clientSecret = "0eca651a8a58408eae91f39349797b77";  // Replace with your client secret
-      const redirectUri = "https://sophiachenh.github.io/spotify-callback/callback.html";  // Replace with your registered redirect URI
+      const redirectUri = "https://sophiachenh.github.io/spotify-callback/callback.html";  // Replace with your redirect URI
 
-      // Base64 encode clientId:clientSecret
       const headers = new Headers();
       headers.set('Authorization', 'Basic ' + btoa(clientId + ':' + clientSecret));
       headers.set('Content-Type', 'application/x-www-form-urlencoded');
@@ -26,35 +25,30 @@
         redirect_uri: redirectUri
       });
 
-      // Make the request to Spotify API to get the access token
+      // Make the request to exchange the code for an access token
       fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
         headers: headers,
         body: body
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.access_token) {
-          console.log("Access Token:", data.access_token);
-
-          // Send the access token to the background script
-          chrome.runtime.sendMessage({ action: 'storeToken', token: data.access_token });
-
-          // Close the callback window after getting the token
-          window.close();
-        } else {
-          console.error("Failed to retrieve access token:", data);
-        }
-      })
-      .catch(err => {
-        console.error("Error:", err);
-      });
-    } else {
-      console.error("Authorization code missing.");
+        .then(response => response.json())
+        .then(data => {
+          if (data.access_token) {
+            console.log('Access Token:', data.access_token);
+            // Send the token to the background script
+            chrome.runtime.sendMessage({ action: 'storeToken', token: data.access_token });
+          } else {
+            console.error('Failed to retrieve access token');
+          }
+        })
+        .catch(err => {
+          console.error('Error:', err);
+        });
     }
   </script>
 </body>
 </html>
+
 
 
 
