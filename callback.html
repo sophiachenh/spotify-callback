@@ -2,22 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spotify Authorization Callback</title>
+  <title>Spotify Auth Callback</title>
 </head>
 <body>
   <script>
     // Extract the authorization code from the URL
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
+    const code = urlParams.get("code");
 
     if (code) {
-      // Spotify app credentials and redirect URI
-      const clientId = 'aab1ffc368c24a60a291c6705b89f7b1';
-      const clientSecret = '0eca651a8a58408eae91f39349797b77';
-      const redirectUri = 'https://sophiachenh.github.io/spotify-callback/callback.html';
+      const clientId = "aab1ffc368c24a60a291c6705b89f7b1";  // Replace with your client ID
+      const clientSecret = "0eca651a8a58408eae91f39349797b77";  // Replace with your client secret
+      const redirectUri = "https://sophiachenh.github.io/spotify-callback/callback.html";  // Replace with your registered redirect URI
 
-      // Prepare headers and body for the POST request
+      // Base64 encode clientId:clientSecret
       const headers = new Headers();
       headers.set('Authorization', 'Basic ' + btoa(clientId + ':' + clientSecret));
       headers.set('Content-Type', 'application/x-www-form-urlencoded');
@@ -25,10 +23,10 @@
       const body = new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: redirectUri,
+        redirect_uri: redirectUri
       });
 
-      // Send POST request to get the access token
+      // Make the request to Spotify API to get the access token
       fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
         headers: headers,
@@ -38,24 +36,26 @@
       .then(data => {
         if (data.access_token) {
           console.log("Access Token:", data.access_token);
-          // Send the token to the background script
-          chrome.runtime.sendMessage({ action: 'storeToken', token: data.access_token }, response => {
-            console.log('Token stored in background script:', response);
-          });
-          window.close(); // Now you can close the window
+
+          // Send the access token to the background script
+          chrome.runtime.sendMessage({ action: 'storeToken', token: data.access_token });
+
+          // Close the callback window after getting the token
+          window.close();
         } else {
           console.error("Failed to retrieve access token:", data);
         }
       })
-      .catch(error => {
-        console.error("Error:", error);
+      .catch(err => {
+        console.error("Error:", err);
       });
     } else {
-      console.error("Authorization code not found in URL.");
+      console.error("Authorization code missing.");
     }
   </script>
 </body>
 </html>
+
 
 
 
