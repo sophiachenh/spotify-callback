@@ -2,20 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Spotify Callback</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Authorization Callback</title>
 </head>
 <body>
-  <h1>Authorizing...</h1>
   <script>
-    const clientId = "aab1ffc368c24a60a291c6705b89f7b1";
-    const clientSecret = "0eca651a8a58408eae91f39349797b77"; // Ensure this is set in the backend, not here for production apps
-    const redirectUri = "https://sophiachenh.github.io/spotify-callback/callback.html"; // Ensure this matches your Spotify registered redirect URI
-
-    // Get the authorization code from the URL
+    // Extract the authorization code from the URL
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
+    const code = urlParams.get('code');
 
     if (code) {
+      // Spotify app credentials and redirect URI
+      const clientId = 'aab1ffc368c24a60a291c6705b89f7b1';
+      const clientSecret = '0eca651a8a58408eae91f39349797b77';
+      const redirectUri = 'https://sophiachenh.github.io/spotify-callback/callback.html';
+
+      // Prepare headers and body for the POST request
       const headers = new Headers();
       headers.set('Authorization', 'Basic ' + btoa(clientId + ':' + clientSecret));
       headers.set('Content-Type', 'application/x-www-form-urlencoded');
@@ -23,10 +25,10 @@
       const body = new URLSearchParams({
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: redirectUri
+        redirect_uri: redirectUri,
       });
 
-      // Make the request to exchange the code for an access token
+      // Send POST request to get the access token
       fetch('https://accounts.spotify.com/api/token', {
         method: 'POST',
         headers: headers,
@@ -36,21 +38,24 @@
       .then(data => {
         if (data.access_token) {
           console.log("Access Token:", data.access_token);
-          // Store the token or send it to the background script
-          chrome.runtime.sendMessage({ action: 'storeToken', token: data.access_token });
+          // Store the access token in localStorage
+          localStorage.setItem('spotifyAccessToken', data.access_token);
+          window.close(); // Close this window
         } else {
           console.error("Failed to retrieve access token:", data);
         }
       })
-      .catch(err => {
-        console.error("Error:", err);
+      .catch(error => {
+        console.error("Error:", error);
       });
     } else {
-      console.error("No authorization code found in URL.");
+      console.error("Authorization code not found in URL.");
     }
   </script>
 </body>
 </html>
+
+
 
 
 
