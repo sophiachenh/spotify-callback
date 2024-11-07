@@ -35,8 +35,12 @@
         .then(data => {
           if (data.access_token) {
             console.log('Access Token:', data.access_token);
-            // Send the token to the background script
-            chrome.runtime.sendMessage({ action: 'storeToken', token: data.access_token });
+
+            // Instead of directly using chrome.runtime, use window.postMessage to communicate with the popup or background page
+            window.opener.postMessage({ action: 'storeToken', token: data.access_token }, '*');
+
+            // Optionally close the callback window
+            window.close();
           } else {
             console.error('Failed to retrieve access token');
           }
@@ -48,6 +52,7 @@
   </script>
 </body>
 </html>
+
 
 
 
