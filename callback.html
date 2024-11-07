@@ -38,9 +38,11 @@
       .then(data => {
         if (data.access_token) {
           console.log("Access Token:", data.access_token);
-          // Store the access token in localStorage
-          localStorage.setItem('spotifyAccessToken', data.access_token);
-          //window.close(); // Close this window
+          // Send the token to the background script
+          chrome.runtime.sendMessage({ action: 'storeToken', token: data.access_token }, response => {
+            console.log('Token stored in background script:', response);
+          });
+          window.close(); // Now you can close the window
         } else {
           console.error("Failed to retrieve access token:", data);
         }
